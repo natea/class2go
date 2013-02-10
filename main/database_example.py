@@ -2,9 +2,9 @@
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
+        'NAME': '<REPLACE_ME>',                      # Or path to database file if using sqlite3.
+        'USER': '<REPLACE_ME>',                      # Not used with sqlite3.
+        'PASSWORD': '<REPLACE_ME>',                  # Not used with sqlite3.
         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     },
@@ -15,7 +15,7 @@ DATABASES = {
 
 }
 
-SECRET_KEY = ''
+SECRET_KEY = '<REPLACE_ME>'
 
 # Set PRODUCTION to True so we don't show stackdumps on errors
 PRODUCTION = False
