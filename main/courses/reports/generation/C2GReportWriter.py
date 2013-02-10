@@ -2,7 +2,7 @@ import logging
 import csv
 import re
 from cStringIO import StringIO
-from settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SECURE_STORAGE_BUCKET_NAME
+from django.conf import settings
 from storages.backends.s3boto import S3BotoStorage
 from django.core.files.storage import default_storage
 from datetime import datetime, timedelta
@@ -17,8 +17,8 @@ class C2GReportWriter:
             
         if self.save_to_s3:
             self.s3_filepath = s3_filepath
-            if AWS_SECURE_STORAGE_BUCKET_NAME == 'local': self.secure_file_storage = default_storage
-            else: self.secure_file_storage = S3BotoStorage(bucket=AWS_SECURE_STORAGE_BUCKET_NAME, access_key=AWS_ACCESS_KEY_ID, secret_key=AWS_SECRET_ACCESS_KEY)
+            if settings.AWS_SECURE_STORAGE_BUCKET_NAME == 'local': self.secure_file_storage = default_storage
+            else: self.secure_file_storage = S3BotoStorage(bucket=settings.AWS_SECURE_STORAGE_BUCKET_NAME, access_key=settings.AWS_ACCESS_KEY_ID, secret_key=settings.AWS_SECRET_ACCESS_KEY)
 
             
     def write(self, content=[], indent = 0, nl = 0):

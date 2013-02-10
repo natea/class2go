@@ -1,6 +1,6 @@
 import logging
 
-from database import AWS_STORAGE_BUCKET_NAME
+from django.conf import settings
 from django.core.cache import get_cache
 
 from c2g.models import AdditionalPage, CacheStat, ContentSection, Course
@@ -96,7 +96,7 @@ def get_common_page_data(request, prefix, suffix, use_cache=True):
         'course_suffix':suffix,
         'course_info_pages':course_info_pages,
         'content_sections':content_sections,
-        'aws_storage_bucket_name':AWS_STORAGE_BUCKET_NAME,
+        'aws_storage_bucket_name':settings.AWS_STORAGE_BUCKET_NAME,
         # These are the parameters that prevent caching page_data in its
         # entirety, based only on course
         'course_mode':     course_mode,

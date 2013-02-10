@@ -2,10 +2,11 @@ from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import Context, loader
 from django.template import RequestContext
+from django.conf import settings
+
 from courses.actions import auth_view_wrapper
 from courses.forums.forms import PiazzaAuthForm
 from c2g.models import PageVisitLog
-from database import PIAZZA_ENDPOINT, PIAZZA_KEY, PIAZZA_SECRET
 from OAuthSimple import OAuthSimple
 
 @auth_view_wrapper
@@ -61,12 +62,12 @@ def view(request, course_prefix, course_suffix):
 
     # Use OAuthSimple to sign the request. 
     signatures = {
-        'consumer_key': PIAZZA_KEY,
-        'shared_secret': PIAZZA_SECRET,
+        'consumer_key': settings.PIAZZA_KEY,
+        'shared_secret': settings.PIAZZA_SECRET,
     }
     oauthsimple = OAuthSimple()
     signed_request = oauthsimple.sign({
-        'path': PIAZZA_ENDPOINT,
+        'path': settings.PIAZZA_ENDPOINT,
         'action': "POST",
         'parameters': lti_params, 
         'signatures': signatures,
@@ -83,7 +84,7 @@ def view(request, course_prefix, course_suffix):
             'common_page_data': request.common_page_data,
             'show_confirmation': show_confirmation,
             'form': form,
-            'piazza_target_url': PIAZZA_ENDPOINT,
+            'piazza_target_url': settings.PIAZZA_ENDPOINT,
             'querystring': querystring,
         }, context_instance=RequestContext(request))
 

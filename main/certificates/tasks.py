@@ -9,10 +9,9 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.template import Context, Template
 
-from settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SECURE_STORAGE_BUCKET_NAME
+from django.conf import settings
 
-
-release_file_storage = S3BotoStorage(bucket=AWS_SECURE_STORAGE_BUCKET_NAME, access_key=AWS_ACCESS_KEY_ID, secret_key=AWS_SECRET_ACCESS_KEY)
+release_file_storage = S3BotoStorage(bucket=settings.AWS_SECURE_STORAGE_BUCKET_NAME, access_key=settings.AWS_ACCESS_KEY_ID, secret_key=settings.AWS_SECRET_ACCESS_KEY)
 
 
 def calculate_basepath(asset_prefix, asset_path):
