@@ -7,6 +7,16 @@ DATABASES = {
         'HOST': '<%= @node[:aws][:database_host] %>',
         'PORT': '',
     },
+<% if @node[:aws].has_key?("readonly_database_instance") %>
+    'readonly': {
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': '<%= @node[:aws][:readonly_database_instance] %>',
+        'USER': '<%= @node[:aws][:readonly_database_user] %>',
+        'PASSWORD': '<%= @node[:aws][:readonly_database_password] %>',
+        'HOST': '<%= @node[:aws][:readonly_database_host] %>',
+        'PORT': '',
+    },
+<% end %>
     'celery': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': '/opt/<%= @appname %>/celery/celerydb.sqlite',
@@ -34,7 +44,8 @@ AWS_ACCESS_KEY_ID = '<%= @node[:aws][:access_key] %>'
 AWS_SECRET_ACCESS_KEY = '<%= @node[:aws][:access_secret] %>'
 AWS_STORAGE_BUCKET_NAME = '<%= @node[:aws][:storage_bucket] %>'
 
-MEDIA_ROOT = ''
+# don't use ephemeral storage for mediaroot
+MEDIA_ROOT = '/opt/assets'
 
 # use AWS ephemeral storage
 KELVINATOR_WORKING_DIR = '/mnt'

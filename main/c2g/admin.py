@@ -10,8 +10,6 @@ admin.site.register(AdditionalPage)
 admin.site.register(Announcement)
 admin.site.register(ProblemSet)
 admin.site.register(EmailAddr)
-admin.site.register(ListEmail)
-admin.site.register(CourseEmail)
 admin.site.register(ContentSection)
 admin.site.register(File)
 admin.site.register(ProblemSetToExercise)
@@ -22,6 +20,8 @@ admin.site.register(CurrentTermMap)
 admin.site.register(Instructor)
 admin.site.register(CourseInstructor)
 admin.site.register(ContentGroup)
+admin.site.register(CourseCertificate)
+admin.site.register(CourseStudentList)
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -57,6 +57,12 @@ class GroupAdmin(admin.ModelAdmin):
 class MailingListAdmin(admin.ModelAdmin):
     readonly_fields = ('members',)
 
+class ListEmailAdmin(admin.ModelAdmin):
+    readonly_fields = ('sender',)
+
+class CourseEmailAdmin(admin.ModelAdmin):
+    readonly_fields = ('sender',)
+
 #class ExamAdmin(reversion.VersionAdmin):
 #    pass
 
@@ -71,3 +77,5 @@ admin.site.register(ExamRecordScore, ExamRecordScoreAdmin)
 admin.site.register(ExamRecordScoreField, ExamRecordScoreFieldAdmin)
 admin.site.register(ExamRecordScoreFieldChoice, ExamRecordScoreFieldChoiceAdmin)
 admin.site.register(MailingList, MailingListAdmin)
+admin.site.register(ListEmail, CourseEmailAdmin)
+admin.site.register(CourseEmail, ListEmailAdmin)
