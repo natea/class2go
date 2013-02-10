@@ -4,13 +4,6 @@ from os import path
 import django.template
 import djcelery
 
-from database import *
-
-#Sets the expires parameter in s3 urls to 10 years out.
-#This needs to be above the import monkeypatch line
-#otherwise we lose the 10 year urls.
-AWS_QUERYSTRING_EXPIRE = 3.156e+8
-
 import monkeypatch
 
 #ADDED FOR url tag future
@@ -23,47 +16,46 @@ djcelery.setup_loader()
 # since we use this for things like queue names, we want to keep this unique
 # to keep things from getting cross wired
 try:
-    INSTANCE
-except NameError:
-    try:
-        from os import getuid
-        from pwd import getpwuid
-        INSTANCE=getpwuid(getuid())[0]
-    except:
-        INSTANCE="unknown"
+    from os import getuid
+    from pwd import getpwuid
+    INSTANCE=getpwuid(getuid())[0]
+except:
+    INSTANCE="unknown"
 
 # the APP is so we can support multiple instances of class2go running on the
 # same set of servers via apache vhosts.  In dev environments it's safe to just
 # use "class2go", this default
-try:
-    APP
-except NameError:
-    APP="class2go"
+APP="class2go"
 
-# If PRODUCTION flag not set in Database.py, then set it now.
+# If PRODUCTION flag not set in local_settings.py, then set it now.
 #PRODUCTION = True
 
-try:
-    PRODUCTION
-except NameError:
-    PRODUCTION = False
+PRODUCTION = True
+DEBUG = False
 
-if PRODUCTION == True:
-    DEBUG = False
-else:
-    DEBUG = True
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'class2go',                      # Or path to database file if using sqlite3.
+        'USER': 'class2go',                      # Not used with sqlite3.
+        'PASSWORD': 'class2go',                  # Not used with sqlite3.
+        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    },
+    'readonly': {                        # optional section, DB to use for reporting
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': '',                      
+        'USER': '',                      
+        'PASSWORD': '',                  
+        'HOST': '',                      
+        'PORT': '',                      
+     },        
+    'celery': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'celerydb.sqlite',
+    },
 
-TEMPLATE_DEBUG = DEBUG
-
-# ADMINS should be set in database.py too.
-try:
-    ADMINS
-except NameError:
-    # TODO: error out in this case since I can't think of a default
-    pass
-
-MANAGERS = ADMINS
-
+}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -81,19 +73,20 @@ LANGUAGE_CODE = 'en-us'
 
 # These site variables are used for display in the product and can 
 # drive any conditional changes (display, etc).
-# Override all four in your database.py file, otherwise they will 
+# Override all four in your local_settings.py file, otherwise they will 
 # default back to Stanford.
-try:
-    SITE_ID
-    SITE_NAME_SHORT
-    SITE_NAME_LONG
-    SITE_TITLE
-except NameError:
-    SITE_ID = 1
-    SITE_NAME_SHORT = 'Stanford'
-    SITE_NAME_LONG = 'Stanford University'
-    SITE_TITLE = 'Stanford Class2Go'
 
+SITE_ID = 1
+SITE_NAME_SHORT = 'Stanford'
+SITE_NAME_LONG = 'Stanford University'
+SITE_TITLE = 'Stanford Class2Go'
+
+# ADMINS should be set in local_settings.py too.
+ADMINS = (
+        ('Class2Go Dev', "YOURNAME@stanford.edu"),
+        )
+
+MANAGERS = ADMINS
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
@@ -106,9 +99,9 @@ USE_L10N = True
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 # If you upload files from a dev machine, set MEDIA_ROOT to be the root dir for the file
-# uploads. If you do this, set in in database.py; not this file.
-#Also, if you set it in database.py, don't uncomment the following line as settings.py
-#runs after database.py
+# uploads. If you do this, set in in local_settings.py; not this file.
+#Also, if you set it in local_settings.py, don't uncomment the following line as settings.py
+#runs after local_settings.py
 #MEDIA_ROOT = ''
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
@@ -175,65 +168,7 @@ ROOT_URLCONF = 'urls'
 ### CACHING ###
 # config info here: see https://docs.djangoproject.com/en/dev/topics/cache
 
-try:
-    LOCAL_CACHE_LOCATION
-except NameError:
-    LOCAL_CACHE_LOCATION = "/opt/class2go"
-
-try:
-    FILE_CACHE_TIME
-except NameError:
-    FILE_CACHE_TIME = 60*60*4    # 4 hours -- files never chang
-
-try:
-    VIDEO_CACHE_TIME
-except NameError:
-    VIDEO_CACHE_TIME = 60*30     # 30 min -- careful of negative caching
-
-
-CACHES = {
-    'file_store': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': LOCAL_CACHE_LOCATION + "/cache-file",
-        'TIMEOUT': FILE_CACHE_TIME,
-        'OPTIONS': {
-            'MAX_ENTRIES': 10000
-        }
-    },
-    'video_store': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': LOCAL_CACHE_LOCATION + "/cache-video",
-        'TIMEOUT': VIDEO_CACHE_TIME,
-        'OPTIONS': {
-            'MAX_ENTRIES': 10000
-        }
-    },
-    'view_store': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': LOCAL_CACHE_LOCATION + "/cache-view",
-        'TIMEOUT': 3600,
-        'OPTIONS': {
-            'MAX_ENTRIES': 10000
-            }
-    },
-    'course_store': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': LOCAL_CACHE_LOCATION + "/cache-course",
-        'TIMEOUT': 7200,
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000
-            }
-    },
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': LOCAL_CACHE_LOCATION + "/cache-default",
-        'TIMEOUT': 3600,
-        'OPTIONS': {
-            'MAX_ENTRIES': 10000
-        }
-    },
-}
-
+LOCAL_CACHE_LOCATION = "/opt/class2go"
 
 thispath = path.dirname(path.realpath(__file__))
 TEMPLATE_DIRS = (
@@ -252,40 +187,40 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 )
 
 INSTALLED_APPS = (
-                      'django.contrib.auth',
-                      'django.contrib.contenttypes',
-                      'django.contrib.sessions',
-                      'django.contrib.sites',
-                      'django.contrib.messages',
-                      'django.contrib.staticfiles',
-                      'django.contrib.humanize',
-                      # Uncomment the next line to enable the admin:
-                      'django.contrib.admin',
-                      # Uncomment the next line to enable admin documentation:
-                      'django.contrib.admindocs',
-                      'registration',
-                      'south',
-                      'djcelery',
-                      #'kombu.transport.django',
-                      'c2g',
-                      'courses',
-                      'courses.forums',
-                      'courses.announcements',
-                      'courses.videos',
-                      'courses.video_exercises',
-                      'courses.email_members',
-                      'courses.reports',
-                      'problemsets',
-                      'django.contrib.flatpages',
-                      'storages',
-                      'celerytest',
-                      'kelvinator',
-                      'db_scripts',
-                      'convenience_redirect',
-                      'exception_snippet',
-                      'rest_framework',
-                       #'reversion',
-                       'certificates',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.sites',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.humanize',
+    # Uncomment the next line to enable the admin:
+    'django.contrib.admin',
+    # Uncomment the next line to enable admin documentation:
+    'django.contrib.admindocs',
+    'registration',
+    'south',
+    'djcelery',
+    #'kombu.transport.django',
+    'c2g',
+    'courses',
+    'courses.forums',
+    'courses.announcements',
+    'courses.videos',
+    'courses.video_exercises',
+    'courses.email_members',
+    'courses.reports',
+    'problemsets',
+    'django.contrib.flatpages',
+    'storages',
+    'celerytest',
+    'kelvinator',
+    'db_scripts',
+    'convenience_redirect',
+    'exception_snippet',
+    'rest_framework',
+    #'reversion',
+    'certificates',
                       )
 if INSTANCE != "prod":
     INSTALLED_APPS += (
@@ -302,33 +237,6 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # By default we use S3 storage.  Make sure we have the settings we need.
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
 
-try:
-    AWS_ACCESS_KEY_ID
-    AWS_SECRET_ACCESS_KEY
-    AWS_STORAGE_BUCKET_NAME
-except NameError:
-    # TODO: fail if not defined
-    pass
-    
-try:
-    AWS_SECURE_STORAGE_BUCKET_NAME
-except NameError:
-    if AWS_STORAGE_BUCKET_NAME.count('-') == 1:
-        AWS_SECURE_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME.split('-')[0]+'-secure-'+AWS_STORAGE_BUCKET_NAME.split('-')[1]
-    else:
-        AWS_SECURE_STORAGE_BUCKET_NAME = AWS_STORAGE_BUCKET_NAME # If bucket name does not follow our S3 conventions, set secure bucket to be same as bucket
-
-# Setting these variables to 'local' is the idiom for using local storage.
-if (AWS_ACCESS_KEY_ID == 'local' or AWS_SECRET_ACCESS_KEY == 'local' or
-        AWS_STORAGE_BUCKET_NAME == 'local'):
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-    # We need MEDIA_ROOT to be set to something useful in this case
-    try:
-        MEDIA_ROOT
-    except NameError:
-        # TODO: fail if not defined
-        pass
 
 #This states that app c2g's UserProfile model is the profile for this site.
 AUTH_PROFILE_MODULE = 'c2g.UserProfile'
@@ -336,68 +244,10 @@ AUTH_PROFILE_MODULE = 'c2g.UserProfile'
 ACCOUNT_ACTIVATION_DAYS = 7 #used by registration
 
 
-
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
-# If PRODUCTION flag not set in Database.py, then set it now.
-try:
-    LOGGING_DIR
-except NameError:
-    LOGGING_DIR = '/var/log/django/'
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters' : {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(pathname)s -- %(funcName)s -- line# %(lineno)d : %(message)s '
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
-    },
-    'handlers': {
-        'null': {
-            'level':'DEBUG',
-            'class':'django.utils.log.NullHandler',
-        },
-        'logfile': {
-            'level':'INFO', #making this DEBUG will log _all_ SQL queries.
-            'class':'logging.handlers.RotatingFileHandler',
-            'formatter':'verbose',
-            'filename': LOGGING_DIR+'/'+APP+'-django.log',
-            'maxBytes': 1024*1024*500,
-            'backupCount': 3,
-        },
-        'console':{
-            'level':'INFO',
-            'class':'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler',
-            'include_html': True,
-        }
-    },
-    'loggers': {
-        '': {
-            'handlers':['mail_admins','logfile', 'console'],
-            'propagate': True,
-            'level':'DEBUG',
-        },
-        'django.request': {
-            'handlers': ['mail_admins','logfile', 'console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.db.backends':{
-            'handlers':['logfile'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-    }
-}
+# If PRODUCTION flag not set in local_settings.py, then set it now.
+LOGGING_DIR = '/var/log/django/'
 
 USE_ETAGS = True
 
@@ -413,61 +263,14 @@ DATABASE_ROUTERS = ['c2g.routers.CeleryDBRouter',
                    ]
 
 # Actually send email
-try:
-   EMAIL_ALWAYS_ACTUALLY_SEND
-except NameError:
-   EMAIL_ALWAYS_ACTUALLY_SEND = False
+EMAIL_ALWAYS_ACTUALLY_SEND = False
 
 # Email Settings
-
 SERVER_EMAIL = 'noreply@class.stanford.edu'
-
-# For Production, or if override is set, actually send email
-if PRODUCTION or EMAIL_ALWAYS_ACTUALLY_SEND:
-    DEFAULT_FROM_EMAIL = "noreply@class.stanford.edu" #probably change for production
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = "email-smtp.us-east-1.amazonaws.com"
-    EMAIL_PORT = 587
-    EMAIL_HOST_USER = SES_SMTP_USER
-    EMAIL_HOST_PASSWORD = SES_SMTP_PASSWD
-    EMAIL_USE_TLS = True
-#Otherwise, send email to a file in the logging directory
-else:
-    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-    EMAIL_FILE_PATH = LOGGING_DIR + '/emails_sent.log'
 
 #Max number of emails sent by each worker, defaults to 10
 #EMAILS_PER_WORKER = 10
 
-#CELERY
-CELERY_ACKS_LATE = True
-CELERY_IGNORE_RESULT = True   # SQS doesn't support, so this stop lots of spurrious
-                              # "*-pidbox" queues from being created
-
-CELERYD_PREFETCH_MULTIPLIER = 1
-
-BROKER_TRANSPORT='sqs'
-BROKER_USER = AWS_ACCESS_KEY_ID
-BROKER_PASSWORD = AWS_SECRET_ACCESS_KEY
-BROKER_TRANSPORT_OPTIONS = {
-    'region': 'us-west-2', 
-    'queue_name_prefix' : INSTANCE+'-',
-    'visibility_timeout' : 3600*6,
-}
-
-CELERY_DEFAULT_QUEUE = APP+'-default'
-CELERY_DEFAULT_EXCHANGE = APP+'-default'
-CELERY_DEFAULT_ROUTING_KEY = APP+'-default'
-
-CELERY_QUEUES = {
-    APP+'-default': {'exchange': APP+'-default', 'routing_key': APP+'-default'},
-    APP+'-long':    {'exchange': APP+'-long',    'routing_key': APP+'-long'},
-}
-
-CELERY_ROUTES = {'kelvinator.tasks.kelvinate': {'queue': APP+'-long', 'routing_key': APP+'-long'},
-                 'kelvinator.tasks.resize':    {'queue': APP+'-long', 'routing_key': APP+'-long'},
-                 'celerytest.tasks.echo_long': {'queue': APP+'-long', 'routing_key': APP+'-long'},
-                }
 
 # Testing related settings
 # Set a specific testrunner to use
@@ -483,8 +286,16 @@ COVERAGE_REPORT_HTML_OUTPUT_DIR = './coverage-report/'
 COVERAGE_CUSTOM_REPORTS = False
 
 # Automated grader for CS145
-try:
-    DB_GRADER_LOADBAL
-except:
-    DB_GRADER_LOADBAL='grade.prod.c2gops.com'
+DB_GRADER_LOADBAL='grade.prod.c2gops.com'
 
+##################
+# LOCAL SETTINGS #
+##################
+
+# Allow any settings to be defined in local_settings.py which should be
+# ignored in your version control system allowing for settings to be
+# defined per machine.
+try:
+    from local_settings import *
+except ImportError:
+    pass
