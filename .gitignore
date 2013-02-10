@@ -1,5 +1,5 @@
+# removed main/database.py
 db-dumps/
-main/database.py
 venv_c2g
 django-class2go
 django-class2go/*
