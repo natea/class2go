@@ -18,3 +18,4 @@ sophi-venv
 .idea
 main/cache-default/
 main/celerydb.sqlite
+main/logs/
